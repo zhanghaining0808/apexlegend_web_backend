@@ -5,8 +5,8 @@ from sqlmodel import select
 from apex_py.db.db import SessionDep
 from apex_py.models.hero import Hero, HeroPublic, HeroUpdate
 
-
-hero_router = APIRouter(prefix="/heroes")
+# 最好使用/api 表示前缀
+hero_router = APIRouter(prefix="/api/heroes")
 # prefix表示前缀
 
 
@@ -41,13 +41,7 @@ def read_hero(hero_id: int, session: SessionDep):
     return hero
 
 
-# # 读取单个英雄name
-# @hero_router.get("/query/{hero_name}", response_model=HeroBase)
-# def read_hero(hero_name: str, session: SessionDep):
-#     hero = session.get(Hero, hero_name)
-#     if not hero:
-#         raise HTTPException(status_code=404, detail="英雄未找到！")
-#     return hero
+# # 根据英雄名称来获取英雄信息
 
 
 # 更新单个英雄
