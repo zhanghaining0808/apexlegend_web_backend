@@ -2,9 +2,10 @@ from sqlmodel import Field, SQLModel
 
 
 class Userbase(SQLModel):
-    name: str = Field(index=True)
-    passwd: str = Field(index=True)
-    phone: str = Field(index=True)
+    # name作为标识，只允许存在一条用户名称相同的数据
+    name: str = Field(index=True, unique=True)
+    phone: str = Field(unique=True)
+    passwd: str
 
 
 class User(Userbase, table=True):

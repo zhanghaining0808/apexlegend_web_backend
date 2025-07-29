@@ -1,11 +1,12 @@
 from datetime import timedelta
 import token
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select
 
 from apex_py.db.db import SessionDep
 from apex_py.models.user import User, UserPublic, UserUpdate
+from apex_py.utils import jwt
 from apex_py.utils.jwt import jwt_decode, jwt_encode
 
 
@@ -13,12 +14,20 @@ user_router = APIRouter(prefix="/api/users")
 
 
 # 创建用户 - 注册用户
-@user_router.post("/add", response_model=UserPublic)
+# @user_router.post("/add", response_model=UserPublic) x错误的，和{"user": user, "access_token": token}不匹配，如果只是return user，这样写就没问题
+@user_router.post("/add")
 def create_user(user: User, session: SessionDep):
+    find_user = session.exec(select(User).where(user.name == User.name)).first()
+
+    if find_user:
+        raise HTTPException(status_code=400, detail="相同用户名称已存在, 请更换用户名!")
+
     session.add(user)
     session.commit()
     session.refresh(user)
-    return user
+    token = jwt_encode({"username": user.name}, timedelta(minutes=30))
+
+    return {"user": user, "access_token": token}
 
 
 # 读取全部用户
@@ -48,7 +57,7 @@ def update_user(user_id: int, user: UserUpdate, session: SessionDep):
     if not user:
         raise HTTPException(status_code=404, detail="用户未找到！")
     user_data = user.model_dump(exclude_unset=True)
-    user_db.sqlmodel_update(user_data)
+    user_db.sqlmodel_update(user_data)  # type: ignore
     session.add(user_db)
     session.commit()
     session.refresh(user_db)
@@ -66,22 +75,31 @@ def delete_user(user_id: int, session: SessionDep):
     return user
 
 
+# 登录功能
 @user_router.post("/login")
 async def login(user: User, session: SessionDep):
-    find_user = session.exec(select(User).where(user.name == User.name)).first()
+    find_user = session.exec(select(User).where(User.name == user.name)).first()
 
     # DEBUG
     print(find_user)
 
-    if not find_user.passwd == user.passwd:
+    if not find_user:
+        raise HTTPException(status_code=400, detail="用户或密码错误")
+
+    if find_user.passwd != user.passwd:
         raise HTTPException(status_code=400, detail="用户名或密码错误")
+
     token = jwt_encode({"username": user.name}, timedelta(minutes=30))
+
     return {"access_token": token}
 
 
 @user_router.post("/login/{token}")
 async def token_login(token: str, session: SessionDep):
     is_valid, decode_data = jwt_decode(token)
+
+    if not decode_data:
+        raise HTTPException(400, detail="token 不存在数据，或token失效，请重新登录!")
 
     find_user = session.exec(
         select(User).where(decode_data["username"] == User.name)

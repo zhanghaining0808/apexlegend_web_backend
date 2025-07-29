@@ -52,7 +52,7 @@ def update_hero(hero_id: int, hero: HeroUpdate, session: SessionDep):
     if not hero:
         raise HTTPException(status_code=404, detail="英雄未找到！")
     hero_data = hero.model_dump(exclude_unset=True)
-    hero_db.sqlmodel_update(hero_data)
+    hero_db.sqlmodel_update(hero_data)  # type: ignore
     session.add(hero_db)
     session.commit()
     session.refresh(hero_db)

@@ -1,5 +1,6 @@
 # 用于加密Token的密匙(生产环境要用更复杂的值)
 from datetime import datetime, timedelta
+from typing import Dict
 from jose import JWTError, jwt
 
 SECRET_KEY = "abcdefg"
@@ -14,7 +15,7 @@ def jwt_encode(data: dict, expires_delta: timedelta) -> str:
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # 生成Token
 
 
-def jwt_decode(token: str) -> bool:
+def jwt_decode(token: str) -> tuple[bool, Dict | None]:
     is_valid = True
     decode_data = None
     try:
