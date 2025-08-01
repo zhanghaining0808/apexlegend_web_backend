@@ -1,13 +1,11 @@
 from datetime import timedelta
-import token
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select
-
 from apex_py.db.db import SessionDep
 from apex_py.models.user import User, UserPublic, UserUpdate
-from apex_py.utils import jwt
 from apex_py.utils.jwt import jwt_decode, jwt_encode
+from apex_py.utils.security import get_passwd_hash, verify_passwd
 
 
 user_router = APIRouter(prefix="/api/users")
@@ -18,9 +16,10 @@ user_router = APIRouter(prefix="/api/users")
 @user_router.post("/add")
 def create_user(user: User, session: SessionDep):
     find_user = session.exec(select(User).where(user.name == User.name)).first()
-
     if find_user:
         raise HTTPException(status_code=400, detail="相同用户名称已存在, 请更换用户名!")
+    # 对密码进行哈希后存储(不再存储明文)
+    user.passwd = get_passwd_hash(user.passwd)
 
     session.add(user)
     session.commit()
@@ -86,12 +85,15 @@ async def login(user: User, session: SessionDep):
     if not find_user:
         raise HTTPException(status_code=400, detail="用户或密码错误")
 
-    if find_user.passwd != user.passwd:
-        raise HTTPException(status_code=400, detail="用户名或密码错误")
+    if not verify_passwd(user.passwd, find_user.passwd):
+        raise HTTPException(status_code=400, detail="用户或密码错误")
 
     token = jwt_encode({"username": user.name}, timedelta(minutes=30))
 
-    return {"access_token": token}
+    return {
+        "user": {"name": find_user.name, "phone": find_user.phone},
+        "access_token": token,
+    }
 
 
 @user_router.post("/login/{token}")
@@ -112,4 +114,4 @@ async def token_login(token: str, session: SessionDep):
     if not find_user and not is_valid:
         raise HTTPException(status_code=400, detail="token错误或失效，请重新登录")
 
-    return {"msg": "token登录成功，已验证身份有效"}
+    return {"user": {"name": find_user.name, "phone": find_user.phone}, "msg": "token登录成功，已验证身份有效"}  # type: ignore
