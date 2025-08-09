@@ -1,3 +1,5 @@
+from typing import List
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
 
@@ -20,3 +22,8 @@ class UserUpdate(Userbase):
     name: str | None = None
     passwd: str | None = None
     phone: str | None = None
+
+
+class UserUpdateReq(BaseModel):
+    update_key: List[str]
+    update_user: UserUpdate

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import select
 
 from apex_py.db.db import SessionDep
-from apex_py.models.hero import Hero, HeroUpdate, HeroUpdateReq
+from apex_py.models.hero import Hero, HeroUpdateReq
 from apex_py.middleware.check_auth import check_auth_M
 from apex_py.models.response import ApexResponse
 
