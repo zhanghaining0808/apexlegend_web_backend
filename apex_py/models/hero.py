@@ -1,3 +1,5 @@
+from typing import List
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
 
@@ -25,10 +27,15 @@ class HeroCreate(HeroBase):
     real_name: str
 
 
-# 创建一个用于更新的数据模型
 class HeroUpdate(HeroBase):
     name: str | None = None
     age: int | None = None
     real_name: str | None = None
     backgroud_story: str | None = None
     describe: str | None = None
+
+
+# 创建一个用于更新的数据模型
+class HeroUpdateReq(BaseModel):
+    update_key: List[str]
+    update_hero: HeroUpdate

@@ -19,9 +19,16 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # 或使用 ["*"] 允许所有源（不推荐生产环境）
+    # 设置允许哪些"来源"(域名)可以访问你的API
+    # 示例：origins = ["http://localhost:3000", "https://yourfrontend.com"]
+    # 使用["*"]表示允许所有网站访问(不安全，仅建议开发用)
     allow_credentials=True,
+    # 允许浏览器在跨域请求中发送凭证(如cookies, HTTP认证等)
     allow_methods=["*"],  # 允许所有方法
+    # 允许所有HTTP方法(GET, POST, PUT等)
+    # 也可以指定具体方法：["GET", "POST"]
     allow_headers=["*"],  # 允许所有头
+    # 允许请求中携带所有类型的头信息
 )
 
 app.include_router(hero_router)
