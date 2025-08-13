@@ -4,6 +4,8 @@ import uvicorn
 from apex_py.db.db import create_db_and_tables
 from apex_py.controls.ctr_hero import hero_router
 from apex_py.controls.ctr_user import user_router
+from apex_py.controls.ctr_weapon import weapon_router
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -34,6 +36,8 @@ app.add_middleware(
 app.include_router(hero_router)
 
 app.include_router(user_router)
+
+app.include_router(weapon_router)
 
 
 # 在启动时创建数据库表
