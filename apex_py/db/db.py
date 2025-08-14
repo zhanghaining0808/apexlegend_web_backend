@@ -2,7 +2,13 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import SQLModel, Session, create_engine
 
-postgres_url = "postgresql://zhn:040808@localhost:5432/apex_clone"
+from apex_py.utils.config import load_config
+
+config = load_config()
+
+postgres_url = (
+    f"postgresql://{config.DB_USER}:{config.DB_PASSWD}@localhost:5432/{config.DB_NAME}"
+)
 engine = create_engine(postgres_url)
 
 

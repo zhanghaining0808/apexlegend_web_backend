@@ -8,6 +8,8 @@ from apex_py.controls.ctr_weapon import weapon_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from apex_py.utils.config import load_config
+
 app = FastAPI()
 # 设置允许的源列表
 origins = [
@@ -47,8 +49,9 @@ def on_startup():
 
 
 if __name__ == "__main__":
+    config = load_config()
     uvicorn.run(
         "main:app",
-        host="localhost",
-        port=25357,
+        host=config.HOSTNAME,
+        port=config.PORT,
     )
