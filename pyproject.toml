@@ -8,6 +8,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "fastapi>=0.116.0",
     "jwt>=1.4.0",
+    "loguru>=0.7.3",
     "passlib>=1.7.4",
     "psycopg2>=2.9.10",
     "python-jose[cryptography]>=3.5.0",

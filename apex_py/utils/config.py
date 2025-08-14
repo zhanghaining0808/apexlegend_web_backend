@@ -12,6 +12,11 @@ class Config(BaseModel):
     DB_NAME: str
     DB_USER: str
     DB_PASSWD: str
+    LOG_CONSOLE_LEVEL: str
+    LOG_CONSOLE_FORMAT: str
+    LOG_FILE_LEVEL: str
+    LOG_FILE_PATH: str
+    LOG_FILE_FORMAT: str
 
 
 def load_config() -> Config:

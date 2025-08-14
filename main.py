@@ -1,14 +1,15 @@
-from fastapi import FastAPI
+import sys
 import uvicorn
 
+from fastapi import FastAPI
 from apex_py.db.db import create_db_and_tables
 from apex_py.controls.ctr_hero import hero_router
 from apex_py.controls.ctr_user import user_router
 from apex_py.controls.ctr_weapon import weapon_router
-
 from fastapi.middleware.cors import CORSMiddleware
-
 from apex_py.utils.config import load_config
+from loguru import logger
+
 
 app = FastAPI()
 # 设置允许的源列表
@@ -50,6 +51,23 @@ def on_startup():
 
 if __name__ == "__main__":
     config = load_config()
+
+    # 先移除默认handler（避免重复输出）
+    logger.remove()
+    # 终端日志输出配置
+    logger.add(
+        sink=sys.stderr,
+        format=config.LOG_CONSOLE_FORMAT,
+        level=config.LOG_CONSOLE_LEVEL,
+    )
+    # 日志文件输出配置
+    logger.add(
+        config.LOG_FILE_PATH, format=config.LOG_FILE_FORMAT, level=config.LOG_FILE_LEVEL
+    )
+    logger.debug("我是调试信息")
+    logger.info("我是基本输出信息")
+    logger.warning("我是一个警告信息")
+    logger.error("我是一个错误信息")
     uvicorn.run(
         "main:app",
         host=config.HOSTNAME,
