@@ -4,13 +4,15 @@ from sqlmodel import select
 
 from apex_py.db.db import SessionDep
 from apex_py.middleware.check_auth import check_auth_M
+from apex_py.middleware.request_loger import request_loger_M
+from apex_py.models.apex_http_exception import ApexHTTPException
 from apex_py.models.response import ApexResponse
 from apex_py.models.weapon import Weapon, WeaponUpdateReq
 
 
 weapon_router = APIRouter(
     prefix="/api/weapons",
-    dependencies=[Depends(check_auth_M)],
+    dependencies=[Depends(request_loger_M), Depends(check_auth_M)],
 )
 
 
@@ -36,7 +38,7 @@ def read_all_weapons(
 def read_weapon(weapon_id: int, session: SessionDep):
     weapon = session.get(Weapon, weapon_id)
     if not weapon:
-        raise HTTPException(status_code=404, detail="武器未找到!")
+        raise ApexHTTPException(status_code=404, detail="武器未找到!")
     return ApexResponse(data=list(weapon), msg="读取单把武器成功")
 
 
@@ -48,9 +50,9 @@ def update_weapon(
     need_update_weapon = weapon_updata_req.update_weapon.model_dump()
 
     if not need_update_weapon:
-        raise HTTPException(status_code=404, detail="武器新数据未找到!")
+        raise ApexHTTPException(status_code=404, detail="武器新数据未找到!")
     if not find_weapon:
-        raise HTTPException(status_code=404, detail="武器旧数据未找到!")
+        raise ApexHTTPException(status_code=404, detail="武器旧数据未找到!")
 
     old_weapon = find_weapon.model_dump()
     new_weapon = old_weapon
@@ -70,7 +72,7 @@ def update_weapon(
 def delete_weapon(weapon_id: int, session: SessionDep):
     weapon = session.get(Weapon, weapon_id)
     if not weapon:
-        raise HTTPException(status_code=404, detail="该武器未找到!")
+        raise ApexHTTPException(status_code=404, detail="该武器未找到!")
     session.delete(weapon)
     session.commit()
     return ApexResponse(data=weapon.model_dump(), msg="武器已删除!")

@@ -1,8 +1,11 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
+from loguru import logger
 from sqlmodel import select
 
 from apex_py.db.db import SessionDep
+from apex_py.middleware.request_loger import request_loger_M
+from apex_py.models.apex_http_exception import ApexHTTPException
 from apex_py.models.hero import Hero, HeroUpdateReq
 from apex_py.middleware.check_auth import check_auth_M
 from apex_py.models.response import ApexResponse
@@ -12,7 +15,7 @@ from apex_py.models.response import ApexResponse
 # 因为我这里希望hero相关的全部api都需要授权后使用,我们可以直接让这个路由使用我们的check_auth中间件
 hero_router = APIRouter(
     prefix="/api/heroes",
-    dependencies=[Depends(check_auth_M)],
+    dependencies=[Depends(request_loger_M), Depends(check_auth_M)],
 )
 
 
@@ -44,7 +47,7 @@ def read_all_heroes(
 def read_hero(hero_id: int, session: SessionDep):
     hero = session.get(Hero, hero_id)
     if not hero:
-        raise HTTPException(status_code=404, detail="英雄未找到！")
+        raise ApexHTTPException(status_code=404, detail="英雄未找到！")
     return ApexResponse(data=list(hero), msg="读取单个英雄成功")
 
 
@@ -59,9 +62,9 @@ def update_hero(hero_id: int, hero_update_req: HeroUpdateReq, session: SessionDe
     need_update_hero = hero_update_req.update_hero.model_dump()
 
     if not need_update_hero:
-        raise HTTPException(status_code=404, detail="英雄新数据未找到！")
+        raise ApexHTTPException(status_code=404, detail="英雄新数据未找到！")
     if not find_hero:
-        raise HTTPException(status_code=404, detail="英雄旧数据未找到！")
+        raise ApexHTTPException(status_code=404, detail="英雄旧数据未找到！")
 
     old_hero = find_hero.model_dump()
     new_hero = old_hero
@@ -82,7 +85,7 @@ def update_hero(hero_id: int, hero_update_req: HeroUpdateReq, session: SessionDe
 def delete_hero(hero_id: int, session: SessionDep):
     hero = session.get(Hero, hero_id)
     if not hero:
-        raise HTTPException(status_code=404, detail="该英雄未找到!")
+        raise ApexHTTPException(status_code=404, detail="该英雄未找到!")
     session.delete(hero)
     session.commit()
     return ApexResponse(data=hero.model_dump(), msg="英雄已删除!")
